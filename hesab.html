@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابداری شخصی</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #28a745;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #555;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #28a745;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .tab:hover {
+            color: #28a745;
+        }
+
+        .tab-content {
+            display: none;
+            text-align: right;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .balance {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .balance span {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+
+        button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .transaction-history table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .transaction-history th, .transaction-history td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .transaction-history th {
+            background-color: #f8f9fa;
+            color: #555;
+        }
+
+        .income {
+            color: #28a745;
+        }
+
+        .expense {
+            color: #dc3545;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .actions button:hover {
+            background-color: #e0a800;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .filter-group label {
+            margin-right: 10px;
+            color: #555;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>حسابداری شخصی</h1>
+        <div class="tabs">
+            <div class="tab active" data-tab="dashboard"><i class="fas fa-home"></i> داشبورد</div>
+            <div class="tab" data-tab="history"><i class="fas fa-history"></i> تاریخچه تراکنش‌ها</div>
+        </div>
+
+        <div class="tab-content active" id="dashboard">
+            <div class="balance">موجودی حساب: <span id="balanceAmount">۰</span> تومان</div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="type">نوع تراکنش:</label>
+                    <select id="type" required>
+                        <option value="income">درآمد</option>
+                        <option value="expense">هزینه</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="category">دسته‌بندی:</label>
+                    <select id="category" required>
+                        <option value="حقوق">حقوق</option>
+                        <option value="خوراک">خوراک</option>
+                        <option value="حمل‌ونقل">حمل‌ونقل</option>
+                        <option value="تفریح">تفریح</option>
+                        <option value="سایر">سایر</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">مبلغ (تومان):</label>
+                    <input type="number" id="amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">توضیحات:</label>
+                    <input type="text" id="description" required>
+                </div>
+                <button type="submit"><i class="fas fa-save"></i> ثبت تراکنش</button>
+            </form>
+            <div class="chart-container">
+                <canvas id="transactionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="tab-content" id="history">
+            <div class="filter-group">
+                <label for="filterType">فیلتر بر اساس نوع:</label>
+                <select id="filterType">
+                    <option value="all">همه</option>
+                    <option value="income">درآمد</option>
+                    <option value="expense">هزینه</option>
+                </select>
+                <label for="filterCategory">فیلتر بر اساس دسته‌بندی:</label>
+                <select id="filterCategory">
+                    <option value="all">همه</option>
+                    <option value="حقوق">حقوق</option>
+                    <option value="خوراک">خوراک</option>
+                    <option value="حمل‌ونقل">حمل‌ونقل</option>
+                    <option value="تفریح">تفریح</option>
+                    <option value="سایر">سایر</option>
+                </select>
+                <label for="filterDate">فیلتر بر اساس تاریخ:</label>
+                <input type="date" id="filterDate">
+            </div>
+            <div class="transaction-history">
+                <h2>تاریخچه تراکنش‌ها</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>تاریخ</th>
+                            <th>نوع</th>
+                            <th>دسته‌بندی</th>
+                            <th>مبلغ</th>
+                            <th>توضیحات</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transactions = [];
+
+        // تابع برای فرمت کردن اعداد به صورت سه‌رقم سه‌رقم
+        function formatNumber(number) {
+            return number.toLocaleString('fa-IR');
+        }
+
+        // بازیابی داده‌ها از Local Storage
+        if (localStorage.getItem('transactions')) {
+            transactions = JSON.parse(localStorage.getItem('transactions'));
+        }
+
+        // آپدیت صفحه با داده‌های ذخیره شده
+        updateUI();
+
+        // مدیریت تب‌ها
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ثبت تراکنش جدید
+        document.getElementById('transactionForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const description = document.getElementById('description').value;
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("لطفاً مبلغ معتبر وارد کنید!");
+                return;
+            }
+
+            const transaction = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString('fa-IR'),
+                type,
+                category,
+                amount,
+                description
+            };
+
+            transactions.push(transaction);
+            saveData();
+            updateUI();
+
+            // ریست فرم
+            document.getElementById('transactionForm').reset();
+        });
+
+        // فیلتر تراکنش‌ها
+        document.getElementById('filterType').addEventListener('change', updateUI);
+        document.getElementById('filterCategory').addEventListener('change', updateUI);
+        document.getElementById('filterDate').addEventListener('change', updateUI);
+
+        // آپدیت موجودی و تاریخچه تراکنش‌ها
+        function updateUI() {
+            const balanceAmount = document.getElementById('balanceAmount');
+            const transactionList = document.getElementById('transactionList');
+
+            // محاسبه موجودی
+            const balance = transactions.reduce((total, transaction) => {
+                return transaction.type === 'income' ? total + transaction.amount : total - transaction.amount;
+            }, 0);
+
+            balanceAmount.textContent = formatNumber(balance);
+
+            // فیلتر تراکنش‌ها
+            const filterType = document.getElementById('filterType').value;
+            const filterCategory = document.getElementById('filterCategory').value;
+            const filterDate = document.getElementById('filterDate').value;
+
+            const filteredTransactions = transactions.filter(transaction => {
+                return (filterType === 'all' || transaction.type === filterType) &&
+                       (filterCategory === 'all' || transaction.category === filterCategory) &&
+                       (!filterDate || transaction.date === new Date(filterDate).toLocaleDateString('fa-IR'));
+            });
+
+            // نمایش تاریخچه تراکنش‌ها
+            transactionList.innerHTML = filteredTransactions.map(transaction => `
+                <tr>
+                    <td>${transaction.date}</td>
+                    <td class="${transaction.type}">${transaction.type === 'income' ? 'درآمد' : 'هزینه'}</td>
+                    <td>${transaction.category}</td>
+                    <td>${formatNumber(transaction.amount)} تومان</td>
+                    <td>${transaction.description}</td>
+                    <td class="actions">
+                        <button onclick="editTransaction(${transaction.id})"><i class="fas fa-edit"></i> ویرایش</button>
+                        <button onclick="deleteTransaction(${transaction.id})"><i class="fas fa-trash"></i> حذف</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // آپدیت نمودار
+            updateChart();
+        }
+
+        // حذف تراکنش
+        function deleteTransaction(id) {
+            transactions = transactions.filter(transaction => transaction.id !== id);
+            saveData();
+            updateUI();
+        }
+
+        // ویرایش تراکنش
+        function editTransaction(id) {
+            const transaction = transactions.find(transaction => transaction.id === id);
+            if (transaction) {
+                document.getElementById('type').value = transaction.type;
+                document.getElementById('category').value = transaction.category;
+                document.getElementById('amount').value = transaction.amount;
+                document.getElementById('description').value = transaction.description;
+
+                deleteTransaction(id);
+            }
+        }
+
+        // ذخیره داده‌ها در Local Storage
+        function saveData() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // آپدیت نمودار
+        function updateChart() {
+            const categories = [...new Set(transactions.map(transaction => transaction.category))];
+            const incomeData = categories.map(category => {
+                return transactions
+                    .filter(transaction => transaction.type === 'income' && transaction.category === category)
+                    .reduce((total, transaction) => total + transaction.amount, 0);
+            });
+            const expenseData = categories.map(category => {
+                return transactions
+                    .filter(transaction => transaction.type === 'expense' && transaction.category === category)
+                    .reduce((total, transaction) => total + transaction.amount, 0);
+            });
+
+            const ctx = document.getElementById('transactionChart').getContext('2d');
+
+            // اگر نمودار قبلی وجود دارد، آن را حذف کن
+            if (window.transactionChart instanceof Chart) {
+                window.transactionChart.destroy();
+            }
+
+            // ایجاد نمودار جدید
+            window.transactionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories,
+                    datasets: [
+                        {
+                            label: 'درآمد',
+                            data: incomeData,
+                            backgroundColor: '#28a745',
+                        },
+                        {
+                            label: 'هزینه',
+                            data: expenseData,
+                            backgroundColor: '#dc3545',
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
